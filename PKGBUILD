@@ -5,7 +5,7 @@
 
 pkgname=xbmc-svn
 pkgver=28276
-pkgrel=1
+pkgrel=4
 pkgdesc="XBMC Media Center from SVN"
 provides=('xbmc')
 conflicts=('xbmc' 'xbmc-pulse')
@@ -48,7 +48,9 @@ build() {
     cd ${srcdir}/
     if [ -d $_svnmod/.svn ]; then
         msg "SVN tree found, reverting changes and updating to -r$pkgver"
-        (cd $_svnmod && svn revert -R . && make distclean; svn up -r $pkgver) || return 1
+        #(cd $_svnmod && svn revert -R . && make distclean; svn up -r $pkgver) || return 1
+	(cd $_svnmod && rm xbmc/linux/ConsoleUPowerSyscall.cpp xbmc/linux/ConsoleUPowerSyscall.h xbmc/linux/UDisksProvider.cpp xbmc/linux/UDisksProvider.h xbmc/PowerManager.cpp 2>/dev/null )
+        (cd $_svnmod && svn revert -R . ; svn up -r $pkgver ) || return 1  
     else
         msg "Checking out SVN tree of -r$pkgver"
         svn co $_svntrunk --config-dir ./ -r $pkgver $_svnmod || return 1
@@ -65,7 +67,10 @@ build() {
 
     # Patch for missing projectM presets
     patch -p0 < ../../projectM.diff || return 1
-
+    patch -p0 < ../../sftp.diff || return 1
+    patch -p2 < ../../glib.diff || return 1 
+    patch -p2 < ../../tvshow.diff || return 1 
+    patch -p1 < ../../uthings.diff || return 1
     # Archlinux Branding by SVN_REV
     export SVN_REV="$pkgver-ARCH"
 

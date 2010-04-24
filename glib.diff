@@ -1,0 +1,10 @@
+Index: /trunk/xbmc/cores/dvdplayer/DVDInputStreams/DVDInputStreamMMS.cpp
+===================================================================
+--- /trunk/xbmc/cores/dvdplayer/DVDInputStreams/DVDInputStreamMMS.cpp (revision 27986)
++++ /trunk/xbmc/cores/dvdplayer/DVDInputStreams/DVDInputStreamMMS.cpp (revision 28700)
+@@ -36,4 +36,5 @@
+ // does still has the "this" usage.
+ #define this instance
++#undef byte
+ #include <libmms/mmsio.h> // FIXME: remove this header once the ubuntu headers is fixed (variable named this)
+ #include <libmms/mms.h>
