@@ -1,3 +1,4 @@
+# Contributor: DonVla <donvla@users.sourceforge.net>
 # Contributors : Ralf Barth <archlinux dot org at haggy dot org>
 #
 # Original credits go to Edgar Hucek <gimli at dark-green dot com>
@@ -20,23 +21,36 @@ depends=('alsa-lib' 'curl' 'enca' 'faac' 'freetype2' 'fribidi' 'gawk' 'glew'
          'libvdpau')
 makedepends=('subversion' 'autoconf' 'automake' 'boost' 'cmake' 'gcc' 'gperf' 
              'libtool>=2.2.6a-1' 'make' 'nasm' 'patch' 'pkgconfig' 'zip' 'flex' 
-             'bison')
+             'bison' 'cvs')
 optdepends=('lirc: remote controller support'
             'gdb: for meaningful backtraces in case of trouble - STRONGLY RECOMMENDED'
             'avahi: to use zerconf features (remote, etc...)'
             'unrar: access compressed files without unpacking them'
-            'devicekit-power: used to trigger suspend functionality')
+            'upower: used to trigger suspend functionality'
+            'udisks: automount external drives')
 install=("${pkgname}.install")
 source=(
     "FEH.sh" 
     "http://trac.xbmc.org/raw-attachment/ticket/8552/projectM.diff"
-)
-noextract=()
-md5sums=(
-    "c3e2ab79b9965f1a4a048275d5f222c4" 
-    "70eed644485de10cb80927bc1a3c77c7"
+    "sftp.diff"
+    "glib.diff"
+    "tvshow.diff"
+    "uthings.diff"
 )
 options=(makeflags)
+md5sums=('c3e2ab79b9965f1a4a048275d5f222c4'
+         '70eed644485de10cb80927bc1a3c77c7'
+    	 'a476c058a8962e51e890129ad805609d'
+    	 '9c179e5152ec60fe8f07e96b4c5ee524'
+    	 'c63d88daf01b1aa9e84d7dc0c1e03956'
+    	 '7ef904719c638ecd7f5ea45975d011d0'
+)
+sha256sums=('1b391dfbaa07f81e5a5a7dfd1288bf2bdeab8dc50bbb6dbf39a80d8797dfaeb0'
+    	    'c379ba3b2b74e825025bf3138b9f2406aa61650868715a8dfc9ff12c3333c2b6'
+    	    '7dca620b450599aa9aa3d6d13786893bff26d3936386a9417c0e43b330df0611'
+    	    'df90d984f7843e526576fe7768f9d4eb80429528831a35d4d92994fea580b1fd'
+    	    'a3053842290ac83d6b9ae11be8060c8875563210fb75c3f78c20367ec07e9a0c'
+    	    '15fe7b0e6ffc3b9b5ef04589d383e3c06038e030458ce2c60742f5781658a2e1')
 
 _svnmod=XBMC
 _prefix=/usr
@@ -48,9 +62,7 @@ build() {
     cd ${srcdir}/
     if [ -d $_svnmod/.svn ]; then
         msg "SVN tree found, reverting changes and updating to -r$pkgver"
-        #(cd $_svnmod && svn revert -R . && make distclean; svn up -r $pkgver) || return 1
-	(cd $_svnmod && rm xbmc/linux/ConsoleUPowerSyscall.cpp xbmc/linux/ConsoleUPowerSyscall.h xbmc/linux/UDisksProvider.cpp xbmc/linux/UDisksProvider.h xbmc/PowerManager.cpp 2>/dev/null )
-        (cd $_svnmod && svn revert -R . ; svn up -r $pkgver ) || return 1  
+       (cd $_svnmod && svn revert -R . && make distclean; svn up -r $pkgver) || return 1
     else
         msg "Checking out SVN tree of -r$pkgver"
         svn co $_svntrunk --config-dir ./ -r $pkgver $_svnmod || return 1
@@ -67,10 +79,14 @@ build() {
 
     # Patch for missing projectM presets
     patch -p0 < ../../projectM.diff || return 1
+    # patch for new libssh api (http://trac.xbmc.org/changeset/28473)
     patch -p0 < ../../sftp.diff || return 1
+    # patch glib 2.23 (http://trac.xbmc.org/changeset/28700)
     patch -p2 < ../../glib.diff || return 1 
+    # patch for broken tvshow scraping (trac.xbmc.org/changeset/28395)
     patch -p2 < ../../tvshow.diff || return 1 
-    patch -p1 < ../../uthings.diff || return 1
+    # patch for udisks/upower (trac.xbmc.org/ticket/9101), this one create some files and do not reapply cleanly even after the svn revert
+    patch -p1 < ../../uthings.diff 
     # Archlinux Branding by SVN_REV
     export SVN_REV="$pkgver-ARCH"
 
@@ -90,9 +106,10 @@ build() {
     make || return 1
 }
 
+
 package() {
 
-    cd "$srcdir/$_svnmod"
+    cd "${srcdir}/${_svnmod}"
     msg "Running make install" 
     make prefix=${pkgdir}${_prefix} install || return 1
 
@@ -111,17 +128,17 @@ package() {
                    ${pkgdir}${_prefix}/bin/xbmc || return 1
 
     # .desktop files
-    install -Dm644 ${srcdir}/$_svnmod/tools/Linux/xbmc.desktop \
+    install -Dm644 ${srcdir}/${_svnmod}/tools/Linux/xbmc.desktop \
                    ${pkgdir}${_prefix}/share/applications/xbmc.desktop || return 1
 
-    install -Dm644 ${srcdir}/$_svnmod/tools/Linux/xbmc.png \
+    install -Dm644 ${srcdir}/${_svnmod}/tools/Linux/xbmc.png \
                    ${pkgdir}${_prefix}/share/pixmaps/xbmc.png || return 1
 
     # Tools
-    install -Dm755 ${srcdir}/$_svnmod/xbmc-xrandr \
+    install -Dm755 ${srcdir}/${_svnmod}/xbmc-xrandr \
                    ${pkgdir}${_prefix}/share/xbmc/xbmc-xrandr || return 1
 
-    install -Dm755 ${srcdir}/$_svnmod/tools/TexturePacker/TexturePacker \
+    install -Dm755 ${srcdir}/${_svnmod}/tools/TexturePacker/TexturePacker \
                    ${pkgdir}${_prefix}/share/xbmc/ || return 1
 
     # Licenses
