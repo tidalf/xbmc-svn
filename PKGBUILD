@@ -6,7 +6,7 @@
 
 pkgname=xbmc-svn
 pkgver=28276
-pkgrel=4
+pkgrel=5
 pkgdesc="XBMC Media Center from SVN"
 provides=('xbmc')
 conflicts=('xbmc' 'xbmc-pulse')
@@ -36,6 +36,7 @@ source=(
     "glib.diff"
     "tvshow.diff"
     "uthings.diff"
+    "recentlyadded.diff"
 )
 options=(makeflags)
 md5sums=('c3e2ab79b9965f1a4a048275d5f222c4'
@@ -44,13 +45,16 @@ md5sums=('c3e2ab79b9965f1a4a048275d5f222c4'
     	 '9c179e5152ec60fe8f07e96b4c5ee524'
     	 'c63d88daf01b1aa9e84d7dc0c1e03956'
     	 '7ef904719c638ecd7f5ea45975d011d0'
+	 'a468fe092191c545d8e099ea134ffb99'
 )
 sha256sums=('1b391dfbaa07f81e5a5a7dfd1288bf2bdeab8dc50bbb6dbf39a80d8797dfaeb0'
     	    'c379ba3b2b74e825025bf3138b9f2406aa61650868715a8dfc9ff12c3333c2b6'
     	    '7dca620b450599aa9aa3d6d13786893bff26d3936386a9417c0e43b330df0611'
     	    'df90d984f7843e526576fe7768f9d4eb80429528831a35d4d92994fea580b1fd'
     	    'a3053842290ac83d6b9ae11be8060c8875563210fb75c3f78c20367ec07e9a0c'
-    	    '15fe7b0e6ffc3b9b5ef04589d383e3c06038e030458ce2c60742f5781658a2e1')
+    	    '15fe7b0e6ffc3b9b5ef04589d383e3c06038e030458ce2c60742f5781658a2e1'
+	    'dcb9e83f6a9b8c696722d446be75d5ad5441ca40ca28a8eb05b93ee9951abe9e'
+	    )
 
 _svnmod=XBMC
 _prefix=/usr
@@ -85,8 +89,10 @@ build() {
     patch -p2 < ../../glib.diff || return 1 
     # patch for broken tvshow scraping (trac.xbmc.org/changeset/28395)
     patch -p2 < ../../tvshow.diff || return 1 
-    # patch for udisks/upower (trac.xbmc.org/ticket/9101), this one create some files and do not reapply cleanly even after the svn revert
+    # patch for udisks/upower (trac.xbmc.org/ticket/9101), this one create some files and do not reapply cleanly even after the svn revert (edit patch had gone uptream)
     patch -p1 < ../../uthings.diff 
+    # patch for broken recentlyadded.py
+    patch -p0 < ../../recentlyadded.diff || return 1
     # Archlinux Branding by SVN_REV
     export SVN_REV="$pkgver-ARCH"
 
